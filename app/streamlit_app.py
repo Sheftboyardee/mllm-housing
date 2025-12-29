@@ -108,13 +108,15 @@ def build_filters(
     return filters if filters else None
 
 
-def display_house_images(images, base_path: str = None):
+def display_house_images(images, base_path: str = None, house_id: str = None):
     """
     Display house images if available.
+    On Streamlit Cloud, only shows images for houses 1-50 (demo_images).
     
     Args:
         images: Dictionary of images or JSON string, or None
         base_path: Base path for resolving image paths (defaults to project root)
+        house_id: House ID (optional, will be extracted from filename if not provided)
     """
     if not images:
         return
@@ -134,13 +136,38 @@ def display_house_images(images, base_path: str = None):
     if base_path is None:
         base_path = Path(__file__).parent.parent
     
-    image_types = ["frontal", "bedroom", "kitchen", "bathroom"]
-    available_images = []
-    image_paths_info = []
-    
     # Try demo_images first (for Streamlit Cloud), then fall back to full dataset
     demo_images_base = Path(base_path) / "data" / "Houses-dataset" / "demo_images"
     full_images_base = Path(base_path) / "data" / "Houses-dataset" / "Houses Dataset"
+    
+    # Detect if we're on Streamlit Cloud (demo_images exists but full dataset doesn't)
+    is_streamlit_cloud = demo_images_base.exists() and not full_images_base.exists()
+    
+    # Extract house ID from first image filename if not provided
+    if house_id is None:
+        for img_type in ["frontal", "bedroom", "kitchen", "bathroom"]:
+            if img_type in images and images[img_type]:
+                filename = Path(images[img_type]).name
+                # Extract house ID from filename (e.g., "12_frontal.jpg" -> 12)
+                try:
+                    house_id = int(filename.split('_')[0])
+                    break
+                except (ValueError, IndexError):
+                    continue
+    
+    # On Streamlit Cloud, only show images for houses 1-50
+    if is_streamlit_cloud and house_id:
+        try:
+            house_id_int = int(house_id)
+            if house_id_int > 50:
+                st.caption(f"📷 Images available for houses 1-50 only in this demo. House #{house_id} images are not included.")
+                return
+        except (ValueError, TypeError):
+            pass  # If we can't parse house_id, continue anyway
+    
+    image_types = ["frontal", "bedroom", "kitchen", "bathroom"]
+    available_images = []
+    image_paths_info = []
     
     for img_type in image_types:
         if img_type in images:
@@ -158,7 +185,6 @@ def display_house_images(images, base_path: str = None):
             demo_path = demo_images_base / filename
             full_path = full_images_base / filename
             
-            # Debug: Check both paths
             if demo_path.exists() and demo_path.is_file():
                 available_images.append((img_type, str(demo_path)))
             elif full_path.exists() and full_path.is_file():
@@ -489,7 +515,7 @@ if should_search and search_query_to_use and search_query_to_use.strip():
                             # Images if available
                             if "images" in meta and meta["images"]:
                                 st.markdown("**Images:**")
-                                display_house_images(meta["images"])
+                                display_house_images(meta["images"], house_id=str(house_id))
                                 st.markdown("")  # spacing
                             
                             # Description
