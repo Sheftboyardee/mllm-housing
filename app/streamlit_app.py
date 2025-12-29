@@ -235,8 +235,7 @@ def display_house_images(images, base_path: str = None, house_id: str = None):
                 try:
                     st.image(
                         img_path,
-                        caption=img_type.capitalize(),
-                        width="container"
+                        caption=img_type.capitalize()
                     )
                 except Exception as e:
                     st.caption(f"Could not load {img_type} image: {str(e)}")
@@ -346,7 +345,7 @@ with st.expander("💡 Example Queries", expanded=False):
         "Home with good natural lighting and updated appliances",
     ]
     for example in examples:
-        if st.button(f"📝 {example}", key=f"example_{example}", width="container"):
+        if st.button(f"📝 {example}", key=f"example_{example}", width="stretch"):
             # When an example is clicked, update the query *and* trigger auto search
             st.session_state.current_query = example
             st.session_state.auto_search = True  # <-- no st.rerun needed anymore
@@ -391,7 +390,7 @@ with col2:
 
 # Search button and results
 st.markdown("---")
-search_clicked = st.button("🔍 Search", type="primary", width="container")
+search_clicked = st.button("🔍 Search", type="primary", width="stretch")
 
 # Trigger search if example query was clicked or search button was clicked
 should_search = search_clicked or st.session_state.auto_search
