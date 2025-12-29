@@ -4,7 +4,7 @@ Shared search helper for querying house embeddings in Pinecone.
 
 from typing import List, Dict, Any, Optional
 from .embeddings import embed_texts
-from .pinecone_client import index
+from .pinecone_client import get_index
 from .config import settings
 
 
@@ -50,7 +50,8 @@ def search_houses(
     if filters is not None:
         query_params["filter"] = filters
     
-    # Query Pinecone
+    # Query Pinecone (lazy initialization)
+    index = get_index()
     response = index.query(**query_params)
     
     return response.matches

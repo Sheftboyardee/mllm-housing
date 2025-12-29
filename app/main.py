@@ -11,7 +11,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from common.search import search_houses
 from common.config import settings
-from common.pinecone_client import pc
+from common.pinecone_client import get_pinecone_client
 
 
 def build_filters(args: argparse.Namespace) -> dict | None:
@@ -218,10 +218,11 @@ def main():
     
     # Override pinecone_index if provided
     if args.pinecone_index:
-        # Update the index in pinecone_client
-        import common.pinecone_client
-        common.pinecone_client.index = pc.Index(args.pinecone_index)
+        # Update the index in settings
         settings.pinecone_index = args.pinecone_index
+        # Reset the cached index so it uses the new index name
+        import common.pinecone_client
+        common.pinecone_client._index = None
         print(f"Using Pinecone index: {args.pinecone_index}")
     
     # Build filters

@@ -47,7 +47,8 @@ async def startup_event():
     
     # Test Pinecone connection
     try:
-        from common.pinecone_client import index
+        from common.pinecone_client import get_index
+        index = get_index()
         # Try a simple describe_index_stats to verify connection
         stats = index.describe_index_stats()
         logger.info(f"✅ Connected to Pinecone index: {settings.pinecone_index}")

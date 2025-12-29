@@ -15,7 +15,7 @@ import os
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from common.embeddings import embed_texts
-from common.pinecone_client import index
+from common.pinecone_client import get_index
 
 
 def read_descriptions(parquet_path: str) -> pd.DataFrame:
@@ -127,6 +127,7 @@ def upsert_to_pinecone(vectors: List[Dict[str, Any]], batch_size: int = 100):
         batch_num = (i // batch_size) + 1
         
         try:
+            index = get_index()
             index.upsert(vectors=batch)
             print(f"Upserted batch {batch_num}/{total_batches} ({len(batch)} vectors)")
         except Exception as e:

@@ -10,7 +10,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from common.config import settings
-from common.pinecone_client import pc
+from common.pinecone_client import get_pinecone_client
 
 
 def create_index_if_not_exists(
@@ -32,6 +32,7 @@ def create_index_if_not_exists(
     print(f"Checking for Pinecone index: {index_name}")
     
     # List existing indexes
+    pc = get_pinecone_client()
     existing_indexes = [idx.name for idx in pc.list_indexes()]
     
     if index_name in existing_indexes:
