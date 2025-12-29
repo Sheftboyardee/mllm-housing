@@ -129,5 +129,5 @@ Desktop.ini
 data/descriptions.parquet
 data/embeddings.parquet
 data/Houses-dataset/house_descriptions.json
-#data/Houses-dataset/Houses Dataset/
+data/Houses-dataset/Houses Dataset/
 
