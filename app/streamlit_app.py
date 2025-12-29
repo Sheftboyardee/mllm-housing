@@ -124,6 +124,7 @@ def display_house_images(images, base_path: str = None):
         try:
             images = json.loads(images)
         except json.JSONDecodeError:
+            st.caption("⚠️ Images data format error")
             return
     
     if not isinstance(images, dict):
@@ -135,6 +136,7 @@ def display_house_images(images, base_path: str = None):
     
     image_types = ["frontal", "bedroom", "kitchen", "bathroom"]
     available_images = []
+    image_paths_info = []
     
     # All images are stored in data/Houses-dataset/Houses Dataset
     images_base = Path(base_path) / "data" / "Houses-dataset" / "Houses Dataset"
@@ -144,12 +146,15 @@ def display_house_images(images, base_path: str = None):
             img_path = images[img_type]
             if not img_path:
                 continue
-                
+            
             # Extract filename from path (handles paths like "Houses-dataset/Houses Dataset/1_bathroom.jpg")
             filename = Path(img_path).name
             
             # Construct full path to image
             full_path = images_base / filename
+            
+            # Store info about the image
+            image_paths_info.append((img_type, filename, img_path))
             
             # Check if image exists
             if full_path.exists() and full_path.is_file():
@@ -169,6 +174,11 @@ def display_house_images(images, base_path: str = None):
                     )
                 except Exception as e:
                     st.caption(f"Could not load {img_type} image: {str(e)}")
+    elif image_paths_info:
+        # Images are referenced but files don't exist (likely on Streamlit Cloud)
+        # Show which images would be available
+        image_types_found = [img_type.capitalize() for img_type, _, _ in image_paths_info]
+        st.caption(f"📷 Images referenced: {', '.join(image_types_found)}. *Image files are not available in this deployment (excluded from repository for size reasons).*")
 
 
 # Page configuration
