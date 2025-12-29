@@ -45,41 +45,6 @@ except (AttributeError, RuntimeError):
     # Streamlit not available or not in Streamlit context
     pass
 
-# Detect if on Streamlit Cloud (demo_images exists but full dataset doesn't)
-def is_streamlit_cloud():
-    """Check if running on Streamlit Cloud by checking for demo_images but not full dataset."""
-    base_path = Path(__file__).parent.parent
-    demo_images_base = base_path / "data" / "Houses-dataset" / "demo_images"
-    full_images_base = base_path / "data" / "Houses-dataset" / "Houses Dataset"
-    return demo_images_base.exists() and not full_images_base.exists()
-
-def get_demo_house_ids():
-    """Get set of house IDs 1-50 for Streamlit Cloud demo filtering."""
-    if not is_streamlit_cloud():
-        return None
-    # Return set of house IDs 1-50 as strings (Pinecone stores IDs as strings)
-    return {str(i) for i in range(1, 51)}
-
-def filter_demo_houses(matches):
-    """Filter matches to only include houses 1-50 on Streamlit Cloud."""
-    demo_house_ids = get_demo_house_ids()
-    if demo_house_ids is None:
-        return matches  # Not on Streamlit Cloud, return all matches
-    
-    filtered = []
-    for match in matches:
-        # Extract house ID from match
-        if hasattr(match, 'id'):
-            house_id = str(match.id)
-        else:
-            house_id = str(match.get("id", ""))
-        
-        # Only include if house ID is in demo set (1-50)
-        if house_id in demo_house_ids:
-            filtered.append(match)
-    
-    return filtered
-
 
 def format_price(price: float) -> str:
     """Format price as currency string."""
@@ -143,15 +108,13 @@ def build_filters(
     return filters if filters else None
 
 
-def display_house_images(images, base_path: str = None, house_id: str = None):
+def display_house_images(images, base_path: str = None):
     """
     Display house images if available.
-    On Streamlit Cloud, only shows images for houses 1-50 (demo_images).
     
     Args:
         images: Dictionary of images or JSON string, or None
         base_path: Base path for resolving image paths (defaults to project root)
-        house_id: House ID (optional, will be extracted from filename if not provided)
     """
     if not images:
         return
@@ -171,38 +134,13 @@ def display_house_images(images, base_path: str = None, house_id: str = None):
     if base_path is None:
         base_path = Path(__file__).parent.parent
     
-    # Try demo_images first (for Streamlit Cloud), then fall back to full dataset
-    demo_images_base = Path(base_path) / "data" / "Houses-dataset" / "demo_images"
-    full_images_base = Path(base_path) / "data" / "Houses-dataset" / "Houses Dataset"
-    
-    # Detect if we're on Streamlit Cloud (demo_images exists but full dataset doesn't)
-    is_streamlit_cloud = demo_images_base.exists() and not full_images_base.exists()
-    
-    # Extract house ID from first image filename if not provided
-    if house_id is None:
-        for img_type in ["frontal", "bedroom", "kitchen", "bathroom"]:
-            if img_type in images and images[img_type]:
-                filename = Path(images[img_type]).name
-                # Extract house ID from filename (e.g., "12_frontal.jpg" -> 12)
-                try:
-                    house_id = int(filename.split('_')[0])
-                    break
-                except (ValueError, IndexError):
-                    continue
-    
-    # On Streamlit Cloud, only show images for houses 1-50
-    if is_streamlit_cloud and house_id:
-        try:
-            house_id_int = int(house_id)
-            if house_id_int > 50:
-                st.caption(f"📷 Images available for houses 1-50 only in this demo. House #{house_id} images are not included.")
-                return
-        except (ValueError, TypeError):
-            pass  # If we can't parse house_id, continue anyway
-    
     image_types = ["frontal", "bedroom", "kitchen", "bathroom"]
     available_images = []
     image_paths_info = []
+    
+    # Try demo_images first (for Streamlit Cloud), then fall back to full dataset
+    demo_images_base = Path(base_path) / "data" / "Houses-dataset" / "demo_images"
+    full_images_base = Path(base_path) / "data" / "Houses-dataset" / "Houses Dataset"
     
     for img_type in image_types:
         if img_type in images:
@@ -224,7 +162,6 @@ def display_house_images(images, base_path: str = None, house_id: str = None):
                 available_images.append((img_type, str(demo_path)))
             elif full_path.exists() and full_path.is_file():
                 available_images.append((img_type, str(full_path)))
-            # If neither exists, we'll show the message below
     
     if available_images:
         # Display images in a grid
@@ -235,22 +172,16 @@ def display_house_images(images, base_path: str = None, house_id: str = None):
                 try:
                     st.image(
                         img_path,
-                        caption=img_type.capitalize()
+                        caption=img_type.capitalize(),
+                        use_container_width=True
                     )
                 except Exception as e:
                     st.caption(f"Could not load {img_type} image: {str(e)}")
     elif image_paths_info:
-        # Images are referenced but files don't exist
-        # Show which images would be available and debug info
+        # Images are referenced but files don't exist (likely on Streamlit Cloud)
+        # Show which images would be available
         image_types_found = [img_type.capitalize() for img_type, _, _ in image_paths_info]
-        filename_example = image_paths_info[0][1] if image_paths_info else "N/A"
-        
-        # Debug: Check if directories exist
-        demo_exists = demo_images_base.exists()
-        full_exists = full_images_base.exists()
-        
-        debug_info = f" (demo_dir exists: {demo_exists}, full_dir exists: {full_exists})"
-        st.caption(f"📷 Images referenced: {', '.join(image_types_found)}. *Image files not found. Looking for: {filename_example}*{debug_info}")
+        st.caption(f"📷 Images referenced: {', '.join(image_types_found)}. *Image files are not available in this deployment (excluded from repository for size reasons).*")
 
 
 # Page configuration
@@ -345,7 +276,7 @@ with st.expander("💡 Example Queries", expanded=False):
         "Home with good natural lighting and updated appliances",
     ]
     for example in examples:
-        if st.button(f"📝 {example}", key=f"example_{example}", width="content"):
+        if st.button(f"📝 {example}", key=f"example_{example}", use_container_width=True):
             # When an example is clicked, update the query *and* trigger auto search
             st.session_state.current_query = example
             st.session_state.auto_search = True  # <-- no st.rerun needed anymore
@@ -390,7 +321,7 @@ with col2:
 
 # Search button and results
 st.markdown("---")
-search_clicked = st.button("🔍 Search", type="primary", width="content")
+search_clicked = st.button("🔍 Search", type="primary", use_container_width=True)
 
 # Trigger search if example query was clicked or search button was clicked
 should_search = search_clicked or st.session_state.auto_search
@@ -421,10 +352,6 @@ if should_search and search_query_to_use and search_query_to_use.strip():
             max_area=max_area,
             zipcode=zipcode
         )
-        
-        # Show info about demo limitation if on Streamlit Cloud
-        if is_streamlit_cloud():
-            st.info("ℹ️ **Demo Mode**: Showing results from houses 1-50 only.")
         
         # Show active filters
         if filters:
@@ -484,9 +411,6 @@ if should_search and search_query_to_use and search_query_to_use.strip():
                     if use_api and not api_available:
                         st.info("ℹ️ Using direct search (FastAPI backend not available)")
                     matches = search_houses(query, top_k=top_k, filters=filters)
-                
-                # Filter to houses 1-50 on Streamlit Cloud
-                matches = filter_demo_houses(matches)
                 
                 if matches:
                     # 2. Add an invisible HTML anchor here
@@ -556,7 +480,7 @@ if should_search and search_query_to_use and search_query_to_use.strip():
                             # Images if available
                             if "images" in meta and meta["images"]:
                                 st.markdown("**Images:**")
-                                display_house_images(meta["images"], house_id=str(house_id))
+                                display_house_images(meta["images"])
                                 st.markdown("")  # spacing
                             
                             # Description
