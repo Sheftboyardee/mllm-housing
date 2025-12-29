@@ -31,7 +31,7 @@ A semantic search system for finding houses using natural language queries. Desc
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/Sheftboyardee/mllm-housing
 cd mllm-housing
 ```
 
@@ -50,7 +50,7 @@ DEFAULT_TOP_K=10
 
 ## Usage
 
-### Option 1: Streamlit Demo (Recommended for Demo)
+### Option 1: Streamlit Demo
 
 Run the Streamlit app:
 ```bash
