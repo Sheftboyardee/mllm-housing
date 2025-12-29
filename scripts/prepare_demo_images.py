@@ -49,8 +49,7 @@ def prepare_demo_images(
                 shutil.copy2(source_file, dest_file)
                 copied_count += 1
     
-    print(f"✅ Copied {copied_count} images to {demo_dir}")
-    print(f"📁 You can now commit these images to git for the demo")
+    print(f"Copied {copied_count} images to {demo_dir}")
     print(f"\nNext steps:")
     print(f"1. Update .gitignore to allow demo_images/")
     print(f"2. Update display_house_images() to check demo_images/ first")

@@ -265,7 +265,7 @@ if "auto_search" not in st.session_state:
     st.session_state.auto_search = False
 
 # API Configuration (optional - can use direct search or API)
-use_api = st.sidebar.checkbox("Use FastAPI Backend", value=False, help="Toggle to use FastAPI backend instead of direct search")
+use_api = st.sidebar.checkbox("Use FastAPI Backend", value=False, help="Not available on Streamlit Cloud.")
 api_url = st.sidebar.text_input("API URL", value="http://localhost:8000")
 
 # Check API availability if enabled
@@ -306,7 +306,7 @@ if query != st.session_state.current_query:
 with st.expander("💡 Example Queries", expanded=False):
     examples = [
         "Large 4-bedroom house with beautiful kitchen",
-        "Home with good natural lighting and updated appliances",
+        "fuzzy, cozy, warm",
     ]
     for example in examples:
         if st.button(f"📝 {example}", key=f"example_{example}", use_container_width=True):
@@ -358,6 +358,7 @@ use_demo_images_only = st.checkbox(
     value=True,
     help="When enabled, only search within houses 1-50. When disabled, shows all houses with text placeholders for images not in demo_images folder."
 )
+st.caption("Streamlit hosting can only process 50 properties on cloud.")
 
 # Search button and results
 st.markdown("---")
