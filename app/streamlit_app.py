@@ -138,8 +138,9 @@ def display_house_images(images, base_path: str = None):
     available_images = []
     image_paths_info = []
     
-    # All images are stored in data/Houses-dataset/Houses Dataset
-    images_base = Path(base_path) / "data" / "Houses-dataset" / "Houses Dataset"
+    # Try demo_images first (for Streamlit Cloud), then fall back to full dataset
+    demo_images_base = Path(base_path) / "data" / "Houses-dataset" / "demo_images"
+    full_images_base = Path(base_path) / "data" / "Houses-dataset" / "Houses Dataset"
     
     for img_type in image_types:
         if img_type in images:
@@ -150,14 +151,16 @@ def display_house_images(images, base_path: str = None):
             # Extract filename from path (handles paths like "Houses-dataset/Houses Dataset/1_bathroom.jpg")
             filename = Path(img_path).name
             
-            # Construct full path to image
-            full_path = images_base / filename
-            
             # Store info about the image
             image_paths_info.append((img_type, filename, img_path))
             
-            # Check if image exists
-            if full_path.exists() and full_path.is_file():
+            # Check demo_images first (for Streamlit Cloud), then full dataset
+            demo_path = demo_images_base / filename
+            full_path = full_images_base / filename
+            
+            if demo_path.exists() and demo_path.is_file():
+                available_images.append((img_type, str(demo_path)))
+            elif full_path.exists() and full_path.is_file():
                 available_images.append((img_type, str(full_path)))
     
     if available_images:
