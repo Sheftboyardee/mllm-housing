@@ -19,29 +19,36 @@ from common.config import settings
 # Reload settings to pick up Streamlit secrets (if available)
 # This needs to happen after streamlit is imported
 try:
+    # Import StreamlitSecretNotFoundError if available
+    try:
+        from streamlit.errors import StreamlitSecretNotFoundError
+    except ImportError:
+        # Fallback for older Streamlit versions
+        StreamlitSecretNotFoundError = Exception
+    
     # Update settings from Streamlit secrets if they exist
     if hasattr(st, 'secrets'):
         # Direct access to secrets - Streamlit Cloud stores them as top-level keys
         try:
             settings.pinecone_api_key = str(st.secrets["PINECONE_API_KEY"])
-        except (KeyError, TypeError, AttributeError):
+        except (StreamlitSecretNotFoundError, KeyError, TypeError, AttributeError):
             pass
         
         try:
             settings.pinecone_index = str(st.secrets["PINECONE_INDEX"])
-        except (KeyError, TypeError, AttributeError):
+        except (StreamlitSecretNotFoundError, KeyError, TypeError, AttributeError):
             pass
         
         try:
             settings.model_name = str(st.secrets["MODEL_NAME"])
-        except (KeyError, TypeError, AttributeError):
+        except (StreamlitSecretNotFoundError, KeyError, TypeError, AttributeError):
             pass
         
         try:
             settings.default_top_k = int(st.secrets["DEFAULT_TOP_K"])
-        except (KeyError, TypeError, AttributeError, ValueError):
+        except (StreamlitSecretNotFoundError, KeyError, TypeError, AttributeError, ValueError):
             pass
-except (AttributeError, RuntimeError):
+except (AttributeError, RuntimeError, ImportError):
     # Streamlit not available or not in Streamlit context
     pass
 

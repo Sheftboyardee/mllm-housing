@@ -15,23 +15,48 @@ def get_env_var(key: str, default: str = "") -> str:
         return value
     
     # Try Streamlit secrets if available (for Streamlit Cloud)
+    # Import StreamlitSecretNotFoundError first so we can catch it properly
+    StreamlitSecretNotFoundError = None
+    try:
+        from streamlit.errors import StreamlitSecretNotFoundError
+    except ImportError:
+        # For older Streamlit versions, create a dummy class that matches the name
+        class StreamlitSecretNotFoundError(Exception):
+            pass
+    
     try:
         import streamlit as st
-        # Access secrets - they can be top-level or nested
-        if hasattr(st, 'secrets'):
-            # Try top-level key first
-            if hasattr(st.secrets, 'get'):
-                secret_value = st.secrets.get(key)
-                if secret_value:
-                    return str(secret_value)
-            # Try direct access
-            try:
-                if key in st.secrets:
-                    return str(st.secrets[key])
-            except (TypeError, KeyError):
-                pass
-    except (ImportError, RuntimeError, AttributeError):
-        # Streamlit not available or not in Streamlit context
+        
+        # Access secrets - catch ALL exceptions since we want to fall back to defaults
+        # StreamlitSecretNotFoundError is raised when secrets file doesn't exist
+        try:
+            if hasattr(st, 'secrets'):
+                # Try using get method
+                try:
+                    if hasattr(st.secrets, 'get'):
+                        secret_value = st.secrets.get(key)
+                        if secret_value:
+                            return str(secret_value)
+                except Exception:
+                    # Catch all exceptions (including StreamlitSecretNotFoundError)
+                    pass
+                
+                # Try direct access
+                try:
+                    secret_value = st.secrets[key]
+                    if secret_value:
+                        return str(secret_value)
+                except Exception:
+                    # Catch all exceptions (including StreamlitSecretNotFoundError, KeyError, etc.)
+                    pass
+        except Exception:
+            # Catch any exception raised when accessing st.secrets
+            # This includes StreamlitSecretNotFoundError when secrets file doesn't exist
+            pass
+    except Exception:
+        # Catch all exceptions at the outermost level
+        # This includes ImportError, RuntimeError, AttributeError, and StreamlitSecretNotFoundError
+        # We want to fall back to defaults in all these cases
         pass
     
     return default
