@@ -115,13 +115,14 @@ def build_filters(
     return filters if filters else None
 
 
-def display_house_images(images, base_path: str = None):
+def display_house_images(images, base_path: str = None, show_placeholders: bool = False):
     """
     Display house images if available.
     
     Args:
         images: Dictionary of images or JSON string, or None
         base_path: Base path for resolving image paths (defaults to project root)
+        show_placeholders: If True, show text placeholders for images not in demo_images
     """
     if not images:
         return
@@ -143,6 +144,7 @@ def display_house_images(images, base_path: str = None):
     
     image_types = ["frontal", "bedroom", "kitchen", "bathroom"]
     available_images = []
+    missing_images = []  # Images referenced but not found in demo_images
     image_paths_info = []
     
     # Try demo_images first (for Streamlit Cloud), then fall back to full dataset
@@ -169,22 +171,46 @@ def display_house_images(images, base_path: str = None):
                 available_images.append((img_type, str(demo_path)))
             elif full_path.exists() and full_path.is_file():
                 available_images.append((img_type, str(full_path)))
+            else:
+                # Image is referenced but not found
+                if show_placeholders:
+                    missing_images.append(img_type)
     
-    if available_images:
-        # Display images in a grid
-        num_cols = min(len(available_images), 4)
+    # Display available images
+    all_items_to_display = available_images.copy()
+    
+    # Add placeholders for missing images if enabled
+    if show_placeholders and missing_images:
+        for img_type in missing_images:
+            all_items_to_display.append((img_type, None))  # None indicates placeholder
+    
+    if all_items_to_display:
+        # Display images and placeholders in a grid
+        num_cols = min(len(all_items_to_display), 4)
         cols = st.columns(num_cols)
-        for idx, (img_type, img_path) in enumerate(available_images):
+        for idx, (img_type, img_path) in enumerate(all_items_to_display):
             with cols[idx % num_cols]:
-                try:
-                    st.image(
-                        img_path,
-                        caption=img_type.capitalize(),
-                        use_container_width=True
+                if img_path is None:
+                    # Show placeholder text
+                    placeholder_text = f"{img_type} picture"
+                    st.markdown(
+                        f'<div style="border: 2px dashed #ccc; padding: 2rem; text-align: center; border-radius: 8px; background-color: #f5f5f5;">'
+                        f'<p style="color: #666; font-size: 1.1rem; margin: 0;">{placeholder_text}</p>'
+                        f'</div>',
+                        unsafe_allow_html=True
                     )
-                except Exception as e:
-                    st.caption(f"Could not load {img_type} image: {str(e)}")
-    elif image_paths_info:
+                    st.caption(img_type.capitalize())
+                else:
+                    # Show actual image
+                    try:
+                        st.image(
+                            img_path,
+                            caption=img_type.capitalize(),
+                            use_container_width=True
+                        )
+                    except Exception as e:
+                        st.caption(f"Could not load {img_type} image: {str(e)}")
+    elif image_paths_info and not show_placeholders:
         # Images are referenced but files don't exist (likely on Streamlit Cloud)
         # Show which images would be available
         image_types_found = [img_type.capitalize() for img_type, _, _ in image_paths_info]
@@ -279,7 +305,7 @@ if query != st.session_state.current_query:
 # Example queries
 with st.expander("💡 Example Queries", expanded=False):
     examples = [
-        "Modern 3-bedroom house with a large kitchen and backyard",
+        "Large 4-bedroom house with beautiful kitchen",
         "Home with good natural lighting and updated appliances",
     ]
     for example in examples:
@@ -325,6 +351,13 @@ with col1:
     top_k = st.slider("Number of results", 1, 20, 10)
 with col2:
     st.markdown("<br>", unsafe_allow_html=True)  # Spacing
+
+# Demo images toggle
+use_demo_images_only = st.checkbox(
+    "🔒 Limit to demo images (houses 1-50)",
+    value=True,
+    help="When enabled, only search within houses 1-50. When disabled, shows all houses with text placeholders for images not in demo_images folder."
+)
 
 # Search button and results
 st.markdown("---")
@@ -419,6 +452,23 @@ if should_search and search_query_to_use and search_query_to_use.strip():
                         st.info("ℹ️ Using direct search (FastAPI backend not available)")
                     matches = search_houses(query, top_k=top_k, filters=filters)
                 
+                # Filter to demo images only (houses 1-50) if toggle is enabled
+                if use_demo_images_only and matches:
+                    demo_house_ids = {str(i) for i in range(1, 51)}  # IDs "1" through "50"
+                    filtered_matches = []
+                    for match in matches:
+                        # Handle both dict-like and object-like matches
+                        if hasattr(match, 'id'):
+                            house_id = str(match.id)
+                        else:
+                            house_id = str(match.get("id", ""))
+                        
+                        if house_id in demo_house_ids:
+                            filtered_matches.append(match)
+                    matches = filtered_matches
+                    if not matches:
+                        st.info("No results found within the demo images range (houses 1-50).")
+                
                 if matches:
                     # 2. Add an invisible HTML anchor here
                     st.markdown('<div id="results_anchor"></div>', unsafe_allow_html=True)
@@ -487,7 +537,8 @@ if should_search and search_query_to_use and search_query_to_use.strip():
                             # Images if available
                             if "images" in meta and meta["images"]:
                                 st.markdown("**Images:**")
-                                display_house_images(meta["images"])
+                                # Show placeholders when toggle is OFF (showing full search)
+                                display_house_images(meta["images"], show_placeholders=not use_demo_images_only)
                                 st.markdown("")  # spacing
                             
                             # Description
