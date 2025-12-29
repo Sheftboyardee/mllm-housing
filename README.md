@@ -50,7 +50,7 @@ DEFAULT_TOP_K=10
 
 ## Usage
 
-### Option 1: Streamlit Demo (Recommended for Demo)
+### Option 1: Streamlit Demo
 
 Run the Streamlit app:
 ```bash
