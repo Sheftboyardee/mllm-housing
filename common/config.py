@@ -17,9 +17,20 @@ def get_env_var(key: str, default: str = "") -> str:
     # Try Streamlit secrets if available (for Streamlit Cloud)
     try:
         import streamlit as st
-        if hasattr(st, 'secrets') and key in st.secrets:
-            return str(st.secrets[key])
-    except (ImportError, RuntimeError):
+        # Access secrets - they can be top-level or nested
+        if hasattr(st, 'secrets'):
+            # Try top-level key first
+            if hasattr(st.secrets, 'get'):
+                secret_value = st.secrets.get(key)
+                if secret_value:
+                    return str(secret_value)
+            # Try direct access
+            try:
+                if key in st.secrets:
+                    return str(st.secrets[key])
+            except (TypeError, KeyError):
+                pass
+    except (ImportError, RuntimeError, AttributeError):
         # Streamlit not available or not in Streamlit context
         pass
     
