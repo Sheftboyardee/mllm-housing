@@ -31,7 +31,7 @@ A semantic search system for finding houses using natural language queries. Desc
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone <https://github.com/Sheftboyardee/mllm-housing>
 cd mllm-housing
 ```
 
