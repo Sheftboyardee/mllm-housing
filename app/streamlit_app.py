@@ -45,6 +45,41 @@ except (AttributeError, RuntimeError):
     # Streamlit not available or not in Streamlit context
     pass
 
+# Detect if on Streamlit Cloud (demo_images exists but full dataset doesn't)
+def is_streamlit_cloud():
+    """Check if running on Streamlit Cloud by checking for demo_images but not full dataset."""
+    base_path = Path(__file__).parent.parent
+    demo_images_base = base_path / "data" / "Houses-dataset" / "demo_images"
+    full_images_base = base_path / "data" / "Houses-dataset" / "Houses Dataset"
+    return demo_images_base.exists() and not full_images_base.exists()
+
+def get_demo_house_ids():
+    """Get set of house IDs 1-50 for Streamlit Cloud demo filtering."""
+    if not is_streamlit_cloud():
+        return None
+    # Return set of house IDs 1-50 as strings (Pinecone stores IDs as strings)
+    return {str(i) for i in range(1, 51)}
+
+def filter_demo_houses(matches):
+    """Filter matches to only include houses 1-50 on Streamlit Cloud."""
+    demo_house_ids = get_demo_house_ids()
+    if demo_house_ids is None:
+        return matches  # Not on Streamlit Cloud, return all matches
+    
+    filtered = []
+    for match in matches:
+        # Extract house ID from match
+        if hasattr(match, 'id'):
+            house_id = str(match.id)
+        else:
+            house_id = str(match.get("id", ""))
+        
+        # Only include if house ID is in demo set (1-50)
+        if house_id in demo_house_ids:
+            filtered.append(match)
+    
+    return filtered
+
 
 def format_price(price: float) -> str:
     """Format price as currency string."""
@@ -388,6 +423,10 @@ if should_search and search_query_to_use and search_query_to_use.strip():
             zipcode=zipcode
         )
         
+        # Show info about demo limitation if on Streamlit Cloud
+        if is_streamlit_cloud():
+            st.info("ℹ️ **Demo Mode**: Showing results from houses 1-50 only.")
+        
         # Show active filters
         if filters:
             with st.expander("📋 Active Filters", expanded=False):
@@ -446,6 +485,9 @@ if should_search and search_query_to_use and search_query_to_use.strip():
                     if use_api and not api_available:
                         st.info("ℹ️ Using direct search (FastAPI backend not available)")
                     matches = search_houses(query, top_k=top_k, filters=filters)
+                
+                # Filter to houses 1-50 on Streamlit Cloud
+                matches = filter_demo_houses(matches)
                 
                 if matches:
                     # 2. Add an invisible HTML anchor here
