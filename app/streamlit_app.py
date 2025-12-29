@@ -158,10 +158,12 @@ def display_house_images(images, base_path: str = None):
             demo_path = demo_images_base / filename
             full_path = full_images_base / filename
             
+            # Debug: Check both paths
             if demo_path.exists() and demo_path.is_file():
                 available_images.append((img_type, str(demo_path)))
             elif full_path.exists() and full_path.is_file():
                 available_images.append((img_type, str(full_path)))
+            # If neither exists, we'll show the message below
     
     if available_images:
         # Display images in a grid
@@ -178,10 +180,17 @@ def display_house_images(images, base_path: str = None):
                 except Exception as e:
                     st.caption(f"Could not load {img_type} image: {str(e)}")
     elif image_paths_info:
-        # Images are referenced but files don't exist (likely on Streamlit Cloud)
-        # Show which images would be available
+        # Images are referenced but files don't exist
+        # Show which images would be available and debug info
         image_types_found = [img_type.capitalize() for img_type, _, _ in image_paths_info]
-        st.caption(f"📷 Images referenced: {', '.join(image_types_found)}. *Image files are not available in this deployment (excluded from repository for size reasons).*")
+        filename_example = image_paths_info[0][1] if image_paths_info else "N/A"
+        
+        # Debug: Check if directories exist
+        demo_exists = demo_images_base.exists()
+        full_exists = full_images_base.exists()
+        
+        debug_info = f" (demo_dir exists: {demo_exists}, full_dir exists: {full_exists})"
+        st.caption(f"📷 Images referenced: {', '.join(image_types_found)}. *Image files not found. Looking for: {filename_example}*{debug_info}")
 
 
 # Page configuration
