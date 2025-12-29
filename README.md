@@ -2,6 +2,7 @@
 
 A semantic search system for finding houses using natural language queries. Describe what you want in plain English with optional filtering, and get semantically similar properties ranked by relevance.
 
+**Check out the demo here:** https://mllm-housing.streamlit.app/
 ## Features
 
 - 🏠 **Natural Language Search**: Describe properties in plain English
