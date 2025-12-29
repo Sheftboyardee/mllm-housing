@@ -306,7 +306,7 @@ if query != st.session_state.current_query:
 with st.expander("💡 Example Queries", expanded=False):
     examples = [
         "Large 4-bedroom house with beautiful kitchen",
-        "fuzzy, cozy, warm",
+        "3-bedroom house with large garden and swimming pool",
     ]
     for example in examples:
         if st.button(f"📝 {example}", key=f"example_{example}", use_container_width=True):
@@ -356,9 +356,8 @@ with col2:
 use_demo_images_only = st.checkbox(
     "🔒 Limit to demo images (houses 1-50)",
     value=True,
-    help="When enabled, only search within houses 1-50. When disabled, shows all houses with text placeholders for images not in demo_images folder."
+    help="When enabled, only search within houses 1-50. When disabled, shows all houses with text placeholders for images not in demo_images folder. Streamlit hosting can only process 50 properties on cloud."
 )
-st.caption("Streamlit hosting can only process 50 properties on cloud.")
 
 # Search button and results
 st.markdown("---")
