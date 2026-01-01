@@ -8,7 +8,7 @@ from pathlib import Path
 import json
 
 def prepare_demo_images(
-    num_houses: int = 200,
+    num_houses: int = 250,
     source_dir: str = "data/Houses-dataset/Houses Dataset",
     demo_dir: str = "data/Houses-dataset/demo_images",
     associations_path: str = "data/Houses-dataset/associations.json"
@@ -17,7 +17,7 @@ def prepare_demo_images(
     Copy images for the first N houses to a demo_images directory.
     
     Args:
-        num_houses: Number of houses to include (default: 200)
+        num_houses: Number of houses to include (default: 250)
         source_dir: Source directory with all images
         demo_dir: Destination directory for demo images
         associations_path: Path to associations.json
@@ -61,8 +61,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--num-houses",
         type=int,
-        default=200,
-        help="Number of houses to include (default: 200)"
+        default=250,
+        help="Number of houses to include (default: 250)"
     )
     args = parser.parse_args()
     

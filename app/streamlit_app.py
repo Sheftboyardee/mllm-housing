@@ -396,7 +396,7 @@ demo_range_text = f"houses 1-{max_demo_house_id}" if max_demo_house_id > 0 else 
 use_demo_images_only = st.checkbox(
     f"🔒 Limit to demo images ({demo_range_text})",
     value=True,
-    help=f"When enabled, only search within {demo_range_text}. When disabled, shows all houses with text placeholders for images not in demo_images folder."
+    help=f"When enabled, only search within {demo_range_text}. When disabled, shows all houses with text placeholders."
 )
 
 # Search button and results
