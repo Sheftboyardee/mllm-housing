@@ -58,6 +58,44 @@ def format_price(price: float) -> str:
     return f"${int(price):,}"
 
 
+def get_demo_images_range(base_path: Path = None) -> int:
+    """
+    Detect the maximum house ID in demo_images directory.
+    
+    Args:
+        base_path: Base path for resolving demo_images (defaults to project root)
+    
+    Returns:
+        Maximum house ID found in demo_images, or 0 if directory doesn't exist
+    """
+    if base_path is None:
+        base_path = Path(__file__).parent.parent
+    
+    demo_images_base = Path(base_path) / "data" / "Houses-dataset" / "demo_images"
+    
+    if not demo_images_base.exists():
+        return 0
+    
+    max_house_id = 0
+    image_types = ["frontal", "bedroom", "kitchen", "bathroom"]
+    
+    # Find the maximum house ID in demo_images
+    for file_path in demo_images_base.glob("*.jpg"):
+        filename = file_path.name
+        # Filename format: {house_id}_{img_type}.jpg
+        parts = filename.replace(".jpg", "").split("_")
+        if len(parts) >= 2:
+            try:
+                house_id = int(parts[0])
+                img_type = "_".join(parts[1:])
+                if img_type in image_types:
+                    max_house_id = max(max_house_id, house_id)
+            except ValueError:
+                continue
+    
+    return max_house_id
+
+
 def build_filters(
     min_bedrooms: int,
     max_bedrooms: int,
@@ -352,11 +390,13 @@ with col1:
 with col2:
     st.markdown("<br>", unsafe_allow_html=True)  # Spacing
 
-# Demo images toggle
+# Demo images toggle - dynamically detect range
+max_demo_house_id = get_demo_images_range()
+demo_range_text = f"houses 1-{max_demo_house_id}" if max_demo_house_id > 0 else "demo images"
 use_demo_images_only = st.checkbox(
-    "🔒 Limit to demo images (houses 1-50)",
+    f"🔒 Limit to demo images ({demo_range_text})",
     value=True,
-    help="When enabled, only search within houses 1-50. When disabled, shows all houses with text placeholders for images not in demo_images folder. Streamlit hosting can only process 50 properties on cloud."
+    help=f"When enabled, only search within {demo_range_text}. When disabled, shows all houses with text placeholders for images not in demo_images folder."
 )
 
 # Search button and results
@@ -452,22 +492,27 @@ if should_search and search_query_to_use and search_query_to_use.strip():
                         st.info("ℹ️ Using direct search (FastAPI backend not available)")
                     matches = search_houses(query, top_k=top_k, filters=filters)
                 
-                # Filter to demo images only (houses 1-50) if toggle is enabled
+                # Filter to demo images only if toggle is enabled
                 if use_demo_images_only and matches:
-                    demo_house_ids = {str(i) for i in range(1, 51)}  # IDs "1" through "50"
-                    filtered_matches = []
-                    for match in matches:
-                        # Handle both dict-like and object-like matches
-                        if hasattr(match, 'id'):
-                            house_id = str(match.id)
-                        else:
-                            house_id = str(match.get("id", ""))
-                        
-                        if house_id in demo_house_ids:
-                            filtered_matches.append(match)
-                    matches = filtered_matches
-                    if not matches:
-                        st.info("No results found within the demo images range (houses 1-50).")
+                    # Dynamically get the range from demo_images directory
+                    max_demo_id = get_demo_images_range()
+                    if max_demo_id > 0:
+                        demo_house_ids = {str(i) for i in range(1, max_demo_id + 1)}  # IDs "1" through max_demo_id
+                        filtered_matches = []
+                        for match in matches:
+                            # Handle both dict-like and object-like matches
+                            if hasattr(match, 'id'):
+                                house_id = str(match.id)
+                            else:
+                                house_id = str(match.get("id", ""))
+                            
+                            if house_id in demo_house_ids:
+                                filtered_matches.append(match)
+                        matches = filtered_matches
+                        if not matches:
+                            st.info(f"No results found within the demo images range (houses 1-{max_demo_id}).")
+                    else:
+                        st.warning("⚠️ Demo images directory not found or empty. Showing all results.")
                 
                 if matches:
                     # 2. Add an invisible HTML anchor here
