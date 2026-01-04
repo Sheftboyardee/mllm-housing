@@ -303,7 +303,7 @@ if "auto_search" not in st.session_state:
     st.session_state.auto_search = False
 
 # API Configuration (optional - can use direct search or API)
-use_api = st.sidebar.checkbox("Use FastAPI Backend", value=False, help="Not available on Streamlit Cloud.")
+use_api = st.sidebar.checkbox("Use FastAPI Backend", value=False, help="Not available on Streamlit Cloud Demo.")
 api_url = st.sidebar.text_input("API URL", value="http://localhost:8000")
 
 # Check API availability if enabled
@@ -553,7 +553,6 @@ if should_search and search_query_to_use and search_query_to_use.strip():
                             with col1:
                                 st.markdown(f"### 🏠 House #{house_id}")
                             with col2:
-                                # Similarity score badge
                                 score_percent = int(score * 100)
                                 st.markdown(
                                     f'<div class="similarity-badge">Match: {score_percent}%</div>',
@@ -602,11 +601,11 @@ if should_search and search_query_to_use and search_query_to_use.strip():
                 with st.expander("Error Details"):
                     st.exception(e)
     else:
-        st.info("Please enter a search query to find houses. Try: 'Modern 3-bedroom house with a large kitchen and backyard'")
+        st.info("Please enter a search query.")
 # Sidebar with info
 with st.sidebar:
     st.markdown("---")
-    st.markdown("ℹ️ About")
+    st.header("ℹ️ About")
     st.markdown("""
     This demo uses semantic search powered by vector embeddings to find houses 
     based on natural language descriptions. You can combine hard filters with natural language 
