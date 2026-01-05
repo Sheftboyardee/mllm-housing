@@ -1,8 +1,3 @@
-"""
-Text to Embedding Pipeline
-Converts house descriptions into embeddings and uploads to Pinecone.
-"""
-
 import pandas as pd
 import numpy as np
 import json
@@ -11,7 +6,6 @@ from typing import List, Dict, Any
 import sys
 import os
 
-# Add parent directory to path to import common modules
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from common.embeddings import embed_texts
@@ -35,7 +29,7 @@ def create_full_text(df: pd.DataFrame) -> pd.DataFrame:
     """
     print("Creating full_text from description and metadata...")
     
-    # Fill NaN values with defaults
+    # Fill NaNs
     df = df.copy()
     df["bedrooms"] = df["bedrooms"].fillna(0)
     df["bathrooms"] = df["bathrooms"].fillna(0)
@@ -63,11 +57,7 @@ def compute_embeddings(texts: List[str]) -> np.ndarray:
     return embeddings
 
 
-def prepare_pinecone_vectors(
-    df: pd.DataFrame,
-    embeddings: np.ndarray,
-    include_image_paths: bool = True
-) -> List[Dict[str, Any]]:
+def prepare_pinecone_vectors(df: pd.DataFrame, embeddings: np.ndarray, include_image_paths: bool = True) -> List[Dict[str, Any]]:
     """
     Prepare vectors for Pinecone upsert.
     
@@ -96,7 +86,7 @@ def prepare_pinecone_vectors(
             }
         }
         
-        # Pinecone metadata only accepts string, number, boolean, or list, thus convert images dict to JSON
+        # Pinecone metadata only accepts string, number, boolean, or list, so convert images dict to JSON
         if include_image_paths and "images" in row and pd.notna(row["images"]):
             if isinstance(row["images"], dict):
                 vector["metadata"]["images"] = json.dumps(row["images"])

@@ -1,7 +1,3 @@
-"""
-FastAPI backend for semantic house search.
-"""
-
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -10,20 +6,17 @@ import sys
 import json
 from pathlib import Path
 
-# Add parent directory to path to import common modules
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from common.search import search_houses
 from common.config import settings
 
-# Initialize FastAPI app
 app = FastAPI(
     title="MLLM House Search API",
     description="Semantic search API for finding houses using natural language queries",
     version="1.0.0"
 )
 
-# Configure CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -39,32 +32,30 @@ async def startup_event():
     import logging
     logger = logging.getLogger("uvicorn")
     
-    # Check configuration
     if not settings.pinecone_api_key:
-        logger.error("⚠️ PINECONE_API_KEY is not set!")
+        logger.error("PINECONE_API_KEY is not set!")
     if not settings.pinecone_index:
-        logger.error("⚠️ PINECONE_INDEX is not set!")
+        logger.error("PINECONE_INDEX is not set!")
     
     # Test Pinecone connection
     try:
         from common.pinecone_client import get_index
         index = get_index()
-        # Try a simple describe_index_stats to verify connection
         stats = index.describe_index_stats()
-        logger.info(f"✅ Connected to Pinecone index: {settings.pinecone_index}")
-        logger.info(f"   Index stats: {stats}")
+        logger.info(f"Connected to Pinecone index: {settings.pinecone_index}")
+        logger.info(f"Index stats: {stats}")
     except Exception as e:
-        logger.error(f"❌ Failed to connect to Pinecone: {str(e)}")
-        logger.error("    Please check your PINECONE_API_KEY and PINECONE_INDEX")
+        logger.error(f"Failed to connect to Pinecone: {str(e)}")
+        logger.error("Check PINECONE_API_KEY and PINECONE_INDEX")
     
     # Test embedding model
     try:
         from common.embeddings import get_embedding_model
         model = get_embedding_model()
-        logger.info(f"✅ Embedding model loaded: {settings.model_name}")
+        logger.info(f"Embedding model loaded: {settings.model_name}")
     except Exception as e:
-        logger.error(f"❌ Failed to load embedding model: {str(e)}")
-        logger.error(f"   Model: {settings.model_name}")
+        logger.error(f"Failed to load embedding model: {str(e)}")
+        logger.error(f"Model: {settings.model_name}")
 
 
 # Request/Response Models
@@ -128,7 +119,6 @@ def build_pinecone_filters(filters: Optional[SearchFilters]) -> Optional[Dict[st
     
     pinecone_filters = {}
     
-    # Bedroom filters
     if filters.min_bedrooms is not None or filters.max_bedrooms is not None:
         bedroom_filter = {}
         if filters.min_bedrooms is not None:
@@ -138,7 +128,6 @@ def build_pinecone_filters(filters: Optional[SearchFilters]) -> Optional[Dict[st
         if bedroom_filter:
             pinecone_filters["bedrooms"] = bedroom_filter
     
-    # Bathroom filters
     if filters.min_bathrooms is not None or filters.max_bathrooms is not None:
         bathroom_filter = {}
         if filters.min_bathrooms is not None:
@@ -148,7 +137,6 @@ def build_pinecone_filters(filters: Optional[SearchFilters]) -> Optional[Dict[st
         if bathroom_filter:
             pinecone_filters["bathrooms"] = bathroom_filter
     
-    # Price filters
     if filters.min_price is not None or filters.max_price is not None:
         price_filter = {}
         if filters.min_price is not None:
@@ -158,7 +146,6 @@ def build_pinecone_filters(filters: Optional[SearchFilters]) -> Optional[Dict[st
         if price_filter:
             pinecone_filters["price"] = price_filter
     
-    # Area filters
     if filters.min_area is not None or filters.max_area is not None:
         area_filter = {}
         if filters.min_area is not None:
@@ -168,7 +155,6 @@ def build_pinecone_filters(filters: Optional[SearchFilters]) -> Optional[Dict[st
         if area_filter:
             pinecone_filters["area"] = area_filter
     
-    # Zipcode filter
     if filters.zipcode is not None:
         pinecone_filters["zipcode"] = {"$eq": str(filters.zipcode)}
     
@@ -195,16 +181,13 @@ def convert_match_to_model(match: Dict[str, Any]) -> HouseMatch:
         house_id = match.get("id", "N/A")
         score = match.get("score", 0.0)
     
-    # Convert metadata_dict to a regular dict
     if not isinstance(metadata_dict, dict):
         metadata_dict = dict(metadata_dict) if hasattr(metadata_dict, '__dict__') else {}
     
-    # Parse images field if it's a JSON string
     if "images" in metadata_dict and isinstance(metadata_dict["images"], str):
         try:
             metadata_dict["images"] = json.loads(metadata_dict["images"])
         except (json.JSONDecodeError, TypeError):
-            # If parsing fails, set to None or empty dict
             metadata_dict["images"] = None
     
     return HouseMatch(
@@ -244,22 +227,18 @@ async def search_houses_endpoint(request: SearchRequest):
     Search for houses using natural language queries.
     
     Example queries:
-    - "Modern 3-bedroom house with a large kitchen and backyard"
-    - "Affordable family home with 4 bedrooms"
-    - "Luxury house with pool and garden"
+      "Large 4-bedroom house with beautiful kitchen"
+      "3-bedroom house with large garden and swimming pool"
     """
     try:
-        # Build Pinecone filters
         pinecone_filters = build_pinecone_filters(request.filters)
         
-        # Perform search
         matches = search_houses(
             query=request.query,
             top_k=request.top_k,
             filters=pinecone_filters
         )
         
-        # Convert matches to response models
         house_matches = [convert_match_to_model(match) for match in matches]
         
         return SearchResponse(
@@ -271,7 +250,6 @@ async def search_houses_endpoint(request: SearchRequest):
     except Exception as e:
         import traceback
         error_detail = f"Error during search: {str(e)}"
-        # Include traceback in detail for debugging (remove in production if needed)
         error_detail += f"\n\nTraceback:\n{traceback.format_exc()}"
         raise HTTPException(
             status_code=500,
@@ -298,7 +276,6 @@ async def search_houses_get(
     Example: /api/search?query=modern+3+bedroom+house&top_k=5
     """
     try:
-        # Build filters from query parameters
         filters = None
         if any([min_bedrooms, max_bedrooms, min_bathrooms, max_bathrooms, 
                 min_price, max_price, min_area, max_area, zipcode]):
@@ -314,17 +291,14 @@ async def search_houses_get(
                 zipcode=zipcode
             )
         
-        # Build Pinecone filters
         pinecone_filters = build_pinecone_filters(filters)
         
-        # Perform search
         matches = search_houses(
             query=query,
             top_k=top_k,
             filters=pinecone_filters
         )
         
-        # Convert matches to response models
         house_matches = [convert_match_to_model(match) for match in matches]
         
         return SearchResponse(
@@ -336,7 +310,6 @@ async def search_houses_get(
     except Exception as e:
         import traceback
         error_detail = f"Error during search: {str(e)}"
-        # Include traceback in detail for debugging (remove in production if needed)
         error_detail += f"\n\nTraceback:\n{traceback.format_exc()}"
         raise HTTPException(
             status_code=500,

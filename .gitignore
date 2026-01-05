@@ -131,7 +131,7 @@ data/embeddings.parquet
 data/Houses-dataset/house_descriptions.json
 data/Houses-dataset/Houses Dataset/
 
-# Allow demo_images for Streamlit Cloud (explicitly include)
+# Explicitly include demo_images for Streamlit Cloud
 !data/Houses-dataset/demo_images/
 !data/Houses-dataset/demo_images/**
 

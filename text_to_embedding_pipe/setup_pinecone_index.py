@@ -1,12 +1,10 @@
 """
-Helper script to create and configure the Pinecone index.
-Run this before uploading embeddings to ensure the index exists with correct settings.
+Helper script to create and configure the Pinecone index. Run this before uploading embeddings to ensure the index exists with correct settings.
 """
 
 import sys
 from pathlib import Path
 
-# Add parent directory to path to import common modules
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from common.config import settings
@@ -31,7 +29,6 @@ def create_index_if_not_exists(
     
     print(f"Checking for Pinecone index: {index_name}")
     
-    # List existing indexes
     pc = get_pinecone_client()
     existing_indexes = [idx.name for idx in pc.list_indexes()]
     
@@ -54,11 +51,7 @@ def create_index_if_not_exists(
         print(f"Metric: {metric}")
         
         try:
-            pc.create_index(
-                name=index_name,
-                dimension=dimension,
-                metric=metric
-            )
+            pc.create_index(name=index_name, dimension=dimension, metric=metric)
             print(f"Successfully created index '{index_name}'")
             return True
         except Exception as e:
@@ -67,7 +60,6 @@ def create_index_if_not_exists(
 
 
 def main():
-    """Main function."""
     import argparse
     
     parser = argparse.ArgumentParser(description="Create Pinecone index for house embeddings")
@@ -93,10 +85,8 @@ def main():
     
     args = parser.parse_args()
     
-    # Check API key
     if not settings.pinecone_api_key:
         print("Error: PINECONE_API_KEY not found in environment variables")
-        print("Please set it in your .env file or environment")
         return
     
     success = create_index_if_not_exists(

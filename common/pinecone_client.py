@@ -1,7 +1,7 @@
 from pinecone import Pinecone
 from .config import settings
 
-# Lazy initialization to avoid errors at import time
+# Lazy init to avoid errors at import time
 _pc = None
 _index = None
 
@@ -30,14 +30,12 @@ def get_index():
         _index = pc.Index(settings.pinecone_index)
     return _index
 
-# For backward compatibility, create these at module level
-# but only if we have the required settings
+
 try:
     if settings.pinecone_api_key:
         pc = get_pinecone_client()
         index = get_index()
     else:
-        # Set to None if not configured - will be initialized on first use
         pc = None
         index = None
 except Exception:

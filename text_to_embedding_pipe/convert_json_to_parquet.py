@@ -1,7 +1,3 @@
-"""
-Converts the JSON output from generate_descriptions.py to the parquet format expected by main.py.
-"""
-
 import json
 import pandas as pd
 from pathlib import Path
@@ -10,9 +6,7 @@ import os
 
 
 def convert_json_to_parquet(json_path: str, parquet_path: str):
-    """
-    Convert JSON descriptions to parquet format.
-    
+    """  
     Args:
         json_path: Path to JSON file with house descriptions
         parquet_path: Path to save parquet file
@@ -24,7 +18,7 @@ def convert_json_to_parquet(json_path: str, parquet_path: str):
     
     print(f"Loaded {len(data)} houses")
     
-    # Flatten the data structure
+    # Flatten data
     records = []
     for house in data:
         record = {
@@ -32,7 +26,6 @@ def convert_json_to_parquet(json_path: str, parquet_path: str):
             "description": house.get("description", ""),
         }
         
-        # Add metadata fields
         if "metadata" in house:
             metadata = house["metadata"]
             record["bedrooms"] = metadata.get("bedrooms", 0)
@@ -47,7 +40,6 @@ def convert_json_to_parquet(json_path: str, parquet_path: str):
             record["zipcode"] = ""
             record["price"] = 0.0
         
-        # Add images
         if "images" in house:
             record["images"] = house["images"]
         
@@ -59,7 +51,6 @@ def convert_json_to_parquet(json_path: str, parquet_path: str):
     if output_dir and not os.path.exists(output_dir):
         os.makedirs(output_dir, exist_ok=True)
     
-    # Save to parquet
     print(f"Saving to {parquet_path}...")
     df.to_parquet(parquet_path, index=False)
     print(f"Converted {len(df)} houses to parquet format")
@@ -67,10 +58,8 @@ def convert_json_to_parquet(json_path: str, parquet_path: str):
 
 
 def main():
-    """Main function."""
     base_path = Path(__file__).parent.parent
     
-    # Default paths
     json_path = base_path / "data" / "Houses-dataset" / "house_descriptions.json"
     parquet_path = base_path / "data" / "descriptions.parquet"
     

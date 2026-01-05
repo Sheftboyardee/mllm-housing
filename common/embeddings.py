@@ -8,14 +8,12 @@ def get_embedding_model():
 
 def embed_texts(texts, show_progress_bar=False):
     """
-    Generate embeddings for text(s).
-    
     Args:
         texts: Single string or list of strings
-        show_progress_bar: Whether to show progress bar (useful for batch processing)
+        show_progress_bar: Whether to show progress bar
     
     Returns:
-        numpy array of embeddings (single embedding if single text, array if list)
+        Array of embeddings
     """
     model = get_embedding_model()
     # Convert single string to list

@@ -6,7 +6,6 @@ import argparse
 import sys
 from pathlib import Path
 
-# Add parent directory to path to import common modules
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from common.search import search_houses
@@ -26,7 +25,6 @@ def build_filters(args: argparse.Namespace) -> dict | None:
     """
     filters = {}
     
-    # Bedroom filters
     if args.min_bedrooms is not None:
         filters["bedrooms"] = {"$gte": args.min_bedrooms}
     if args.max_bedrooms is not None:
@@ -35,7 +33,6 @@ def build_filters(args: argparse.Namespace) -> dict | None:
         else:
             filters["bedrooms"] = {"$lte": args.max_bedrooms}
     
-    # Bathroom filters
     if args.min_bathrooms is not None:
         filters["bathrooms"] = {"$gte": args.min_bathrooms}
     if args.max_bathrooms is not None:
@@ -44,7 +41,6 @@ def build_filters(args: argparse.Namespace) -> dict | None:
         else:
             filters["bathrooms"] = {"$lte": args.max_bathrooms}
     
-    # Price filters
     if args.min_price is not None:
         filters["price"] = {"$gte": args.min_price}
     if args.max_price is not None:
@@ -53,7 +49,6 @@ def build_filters(args: argparse.Namespace) -> dict | None:
         else:
             filters["price"] = {"$lte": args.max_price}
     
-    # Area filters
     if args.min_area is not None:
         filters["area"] = {"$gte": args.min_area}
     if args.max_area is not None:
@@ -62,7 +57,6 @@ def build_filters(args: argparse.Namespace) -> dict | None:
         else:
             filters["area"] = {"$lte": args.max_area}
     
-    # Zipcode filter
     if args.zipcode is not None:
         filters["zipcode"] = {"$eq": str(args.zipcode)}
     
@@ -92,21 +86,12 @@ def pretty_print_results(results: list, top_k: int):
         score = match["score"]
         metadata = match.get("metadata", {})
         
-        # Extract metadata fields
         bedrooms = int(metadata.get("bedrooms", 0))
         bathrooms = int(metadata.get("bathrooms", 0))
         area = int(metadata.get("area", 0))
         price = float(metadata.get("price", 0))
         description = metadata.get("description", "No description available")
-        
-        # Truncate description 
-        #if len(description) > 200:
-        #    description = description[:200] + "..."
-        
-        # Since I'm manually truncating to 160
-        description = description + "..."
-        
-        # Format the output
+
         print(f"#{idx}: House ID {house_id} | Similarity: {score:.2f}")
         print(f"    {bedrooms} bed, {bathrooms} bath, {area} sqft, {format_price(price)}")
         print(f"    {description}\n")
@@ -136,7 +121,6 @@ def parse_arguments():
         help=f"Number of results to return (default: {settings.default_top_k})"
     )
     
-    # Bedroom filters
     parser.add_argument(
         "--min-bedrooms",
         type=int,
@@ -152,7 +136,6 @@ def parse_arguments():
         help="Maximum number of bedrooms"
     )
     
-    # Bathroom filters
     parser.add_argument(
         "--min-bathrooms",
         type=float,
@@ -168,7 +151,6 @@ def parse_arguments():
         help="Maximum number of bathrooms"
     )
     
-    # Price filters
     parser.add_argument(
         "--min-price",
         type=float,
@@ -184,7 +166,6 @@ def parse_arguments():
         help="Maximum price"
     )
     
-    # Area filters
     parser.add_argument(
         "--min-area",
         type=int,
@@ -200,7 +181,6 @@ def parse_arguments():
         help="Maximum area in sqft"
     )
     
-    # Zipcode filter
     parser.add_argument(
         "--zipcode",
         type=str,
@@ -212,30 +192,24 @@ def parse_arguments():
 
 
 def main():
-    """Main CLI application."""
-    # Parse arguments
     args = parse_arguments()
     
     # Override pinecone_index if provided
     if args.pinecone_index:
-        # Update the index in settings
         settings.pinecone_index = args.pinecone_index
-        # Reset the cached index so it uses the new index name
+        # Reset cached index so it uses new index name
         import common.pinecone_client
         common.pinecone_client._index = None
         print(f"Using Pinecone index: {args.pinecone_index}")
     
-    # Build filters
     filters = build_filters(args)
     
-    # Get query from user
     query = input("Describe the house you want: ").strip()
     
     if not query:
         print("Error: Query cannot be empty.")
         return
     
-    # Perform search
     print(f"\nSearching for: '{query}'...")
     if filters:
         print(f"Filters: {filters}")
@@ -247,7 +221,6 @@ def main():
             filters=filters
         )
         
-        # Pretty-print results
         pretty_print_results(results, args.top_k or settings.default_top_k)
         
     except Exception as e:

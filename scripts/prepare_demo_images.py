@@ -14,19 +14,12 @@ def prepare_demo_images(
     associations_path: str = "data/Houses-dataset/associations.json"
 ):
     """
-    Copy images for the first N houses to a demo_images directory.
-    
-    Args:
-        num_houses: Number of houses to include (default: 250)
-        source_dir: Source directory with all images
-        demo_dir: Destination directory for demo images
-        associations_path: Path to associations.json
+    Copy images for the first N houses to demo_images directory.
     """
     source = Path(source_dir)
     demo = Path(demo_dir)
     demo.mkdir(parents=True, exist_ok=True)
     
-    # Load associations to get house IDs
     with open(associations_path, 'r') as f:
         associations = json.load(f)
     
