@@ -75,13 +75,13 @@ This will:
 
 ## File Status
 
-### `convert_json_to_parquet.py` - COMPLETE
+### `convert_json_to_parquet.py` 
 - Converts JSON to parquet format
 - Handles metadata extraction
 - Includes image paths
 - Error handling for missing files
 
-### `main.py` - COMPLETE
+### `main.py`
 - Reads parquet file
 - Creates full_text from metadata + description
 - Generates embeddings
@@ -90,7 +90,7 @@ This will:
 - Saves local backup
 - Error handling and validation
 
-### `setup_pinecone_index.py` - NEW
+### `setup_pinecone_index.py` 
 - Creates Pinecone index if it doesn't exist
 - Verifies index dimensions match embedding model
 - Handles existing indexes gracefully
