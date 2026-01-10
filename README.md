@@ -5,11 +5,11 @@ A semantic search system for finding houses using natural language queries. Desc
 **Check out the demo here:** https://mllm-housing.streamlit.app
 ## Features
 
-- 🏠 **Natural Language Search**: Describe properties in plain English
-- 🔍 **Semantic Similarity**: Uses vector embeddings to find semantically similar properties
-- 🚀 **FastAPI Backend**: RESTful API for programmatic access
-- 💻 **Streamlit Frontend**: Interactive web demo
-- 🎯 **Flexible Filtering**: Optional filters for bedrooms, bathrooms, price, area, and zipcode
+- **Natural Language Search**: Describe properties in plain English
+- **Semantic Similarity**: Uses vector embeddings to find semantically similar properties
+- **FastAPI Backend**: RESTful API for programmatic access
+- **Streamlit Frontend**: Interactive web demo
+- **Flexible Filtering**: Optional filters for bedrooms, bathrooms, price, area, and zipcode
 
 ## How It Works
 
